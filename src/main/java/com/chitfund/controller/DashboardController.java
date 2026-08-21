@@ -4,6 +4,8 @@ import com.chitfund.repository.AuctionRepository;
 import com.chitfund.repository.ChitGroupRepository;
 import com.chitfund.repository.CollectionRepository;
 import com.chitfund.repository.MemberRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -19,9 +21,10 @@ public class DashboardController {
     private final CollectionRepository collectionRepo;
     private final AuctionRepository auctionRepo;
 
-    // Spring automatically injects the existing 4 repositories here
-    public DashboardController(ChitGroupRepository groupRepo, MemberRepository memberRepo,
-                               CollectionRepository collectionRepo, AuctionRepository auctionRepo) {
+    public DashboardController(ChitGroupRepository groupRepo,
+                               MemberRepository memberRepo,
+                               CollectionRepository collectionRepo,
+                               AuctionRepository auctionRepo) {
         this.groupRepo = groupRepo;
         this.memberRepo = memberRepo;
         this.collectionRepo = collectionRepo;
@@ -29,25 +32,36 @@ public class DashboardController {
     }
 
     @GetMapping("/stats")
-    public Map<String, Object> getStats() {
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
+    public ResponseEntity<Map<String, Object>> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
 
-        // Pulling counts directly from ChitGroupRepository & MemberRepository
-        stats.put("totalChitGroups", groupRepo.count());
-        stats.put("totalMembers", memberRepo.count());
-        stats.put("activeChitGroups", groupRepo.countByStatus("ACTIVE"));
-        stats.put("completedChitGroups", groupRepo.countByStatus("COMPLETED"));
+        // Group and Member Counts
+        long totalGroups = groupRepo.count();
+        long totalMembers = memberRepo.count();
 
-        // Pulling totals directly from CollectionRepository
+        stats.put("activeGroupsCount", totalGroups);
+        stats.put("totalMembersCount", totalMembers);
+        stats.put("totalChitGroups", totalGroups);
+        stats.put("totalMembers", totalMembers);
+
+        // Dynamic Collection Totals with null safety
         Double totalColl = collectionRepo.getTotalCollections();
         Double pendingColl = collectionRepo.getPendingCollections();
 
-        stats.put("totalMonthlyCollections", totalColl != null ? totalColl : 0.0);
-        stats.put("pendingCollections", pendingColl != null ? pendingColl : 0.0);
+        double totalCollectionsAmount = (totalColl != null) ? totalColl : 0.0;
+        double pendingCollectionsAmount = (pendingColl != null) ? pendingColl : 0.0;
 
-        // Pulling recent auctions from AuctionRepository
+        stats.put("totalCollectionsAmount", totalCollectionsAmount);
+        stats.put("totalMonthlyCollections", totalCollectionsAmount);
+        stats.put("pendingCollections", pendingCollectionsAmount);
+
+        // Default or aggregated total scheme value
+        stats.put("totalChitAmount", 0.0);
+
+        // Recent Auctions list
         stats.put("recentAuctions", auctionRepo.findAll());
 
-        return stats;
+        return ResponseEntity.ok(stats);
     }
 }

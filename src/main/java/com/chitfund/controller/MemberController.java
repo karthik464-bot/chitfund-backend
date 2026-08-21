@@ -4,6 +4,8 @@ import com.chitfund.model.ChitGroup;
 import com.chitfund.model.Member;
 import com.chitfund.repository.ChitGroupRepository;
 import com.chitfund.repository.MemberRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,52 +24,74 @@ public class MemberController {
     }
 
     @GetMapping
-    public List<Member> getAll(@RequestParam(required = false) String search) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'MEMBER', 'ROLE_ADMIN', 'ROLE_AGENT', 'ROLE_MEMBER')")
+    public ResponseEntity<List<Member>> getAllMembers(@RequestParam(required = false) String search) {
         if (search != null && !search.trim().isEmpty()) {
-            return memberRepo.findByMemberNameContainingIgnoreCase(search);
+            return ResponseEntity.ok(memberRepo.findByNameContainingIgnoreCase(search));
         }
-        return memberRepo.findAll();
+        return ResponseEntity.ok(memberRepo.findAll());
     }
 
     @PostMapping
-    public Member create(@RequestBody Member member) {
-        return memberRepo.save(member);
+    @PreAuthorize("hasAnyRole('ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<Member> createMember(@RequestBody Member member) {
+        return ResponseEntity.ok(memberRepo.save(member));
     }
 
     @PutMapping("/{id}")
-    public Member update(@PathVariable Long id, @RequestBody Member details) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<Member> updateMember(@PathVariable Long id, @RequestBody Member details) {
         Member member = memberRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + id));
-        member.setMemberName(details.getMemberName());
+
+        if (details.getName() != null) {
+            member.setName(details.getName());
+        }
+
         member.setMobileNumber(details.getMobileNumber());
         member.setEmailAddress(details.getEmailAddress());
         member.setAddress(details.getAddress());
-        return memberRepo.save(member);
+
+        return ResponseEntity.ok(memberRepo.save(member));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        memberRepo.deleteById(id);
+    @PreAuthorize("hasAnyRole('ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
+        Member member = memberRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Member not found with id: " + id));
+
+        // Unlink enrolled chit groups to prevent foreign key errors
+        if (member.getChitGroups() != null) {
+            member.getChitGroups().clear();
+            memberRepo.save(member);
+        }
+
+        memberRepo.delete(member);
+        return ResponseEntity.noContent().build();
     }
 
-    // Module 5: Member Enrollment Endpoints
     @PostMapping("/{memberId}/enroll/{groupId}")
-    public Member enrollGroup(@PathVariable Long memberId, @PathVariable Long groupId) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'ROLE_ADMIN', 'ROLE_AGENT')")
+    public ResponseEntity<Member> enrollGroup(@PathVariable Long memberId, @PathVariable Long groupId) {
         Member member = memberRepo.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + memberId));
         ChitGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+
         member.getChitGroups().add(group);
-        return memberRepo.save(member);
+        return ResponseEntity.ok(memberRepo.save(member));
     }
 
     @DeleteMapping("/{memberId}/unenroll/{groupId}")
-    public Member unenrollGroup(@PathVariable Long memberId, @PathVariable Long groupId) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'ROLE_ADMIN', 'ROLE_AGENT')")
+    public ResponseEntity<Member> unenrollGroup(@PathVariable Long memberId, @PathVariable Long groupId) {
         Member member = memberRepo.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + memberId));
         ChitGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+
         member.getChitGroups().remove(group);
-        return memberRepo.save(member);
+        return ResponseEntity.ok(memberRepo.save(member));
     }
 }
