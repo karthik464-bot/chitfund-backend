@@ -1,5 +1,6 @@
 package com.chitfund.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +14,9 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Collection {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,18 +26,18 @@ public class Collection {
     private Member member;
 
     @ManyToOne
-    @JoinColumn(name = "group_id", nullable = false)
+    @JoinColumn(name = "chit_group_id", nullable = false)
     private ChitGroup chitGroup;
 
     @Column(nullable = false)
-    private BigDecimal installmentAmount;
+    private BigDecimal amount;
 
     @Column(nullable = false)
     private LocalDate paymentDate;
 
     @Column(nullable = false)
-    private String paymentMode; // CASH, UPI, BANK_TRANSFER
+    private String paymentMode;
 
     @Column(nullable = false)
-    private String paymentStatus = "PAID"; // PAID, PENDING
+    private String status = "PAID";
 }
