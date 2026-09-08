@@ -11,6 +11,7 @@ import java.util.List;
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
     List<Collection> findByMemberNameContainingIgnoreCase(String name);
+    List<Collection> findByMemberIdIn(List<Long> memberIds);
 
     @Query("SELECT COALESCE(SUM(c.amount), 0) FROM Collection c WHERE c.status = 'PAID'")
     Double getTotalCollections();

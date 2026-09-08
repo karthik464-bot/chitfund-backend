@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findByChitGroupGroupNameContainingIgnoreCase(String groupName);
+
 }

@@ -21,13 +21,22 @@ public class Member {
 
     private String name;
     private String memberName;
+
+    @Column(name = "mobile_number", nullable = false)
     private String mobileNumber;
+
+    @Column(name = "email_address")
     private String emailAddress;
+
     private String address;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "assigned_agent_id")
+    private User assignedAgent;
 
     @ManyToMany
     @JoinTable(
-            name = "member_groups",
+            name = "group_enrollments",
             joinColumns = @JoinColumn(name = "member_id"),
             inverseJoinColumns = @JoinColumn(name = "group_id")
     )
@@ -50,6 +59,9 @@ public class Member {
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+
+    public User getAssignedAgent() { return assignedAgent; }
+    public void setAssignedAgent(User assignedAgent) { this.assignedAgent = assignedAgent; }
 
     public Set<ChitGroup> getChitGroups() { return chitGroups; }
     public void setChitGroups(Set<ChitGroup> chitGroups) { this.chitGroups = chitGroups; }

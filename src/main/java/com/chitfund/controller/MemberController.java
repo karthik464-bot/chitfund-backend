@@ -71,7 +71,8 @@ public class MemberController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{memberId}/enroll/{groupId}")
+    // Maps both /groups/{groupId} (React default) and /enroll/{groupId}
+    @PostMapping({ "/{memberId}/groups/{groupId}", "/{memberId}/enroll/{groupId}" })
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'ROLE_ADMIN', 'ROLE_AGENT')")
     public ResponseEntity<Member> enrollGroup(@PathVariable Long memberId, @PathVariable Long groupId) {
         Member member = memberRepo.findById(memberId)
@@ -83,7 +84,8 @@ public class MemberController {
         return ResponseEntity.ok(memberRepo.save(member));
     }
 
-    @DeleteMapping("/{memberId}/unenroll/{groupId}")
+    // Maps both /groups/{groupId} and /unenroll/{groupId}
+    @DeleteMapping({ "/{memberId}/groups/{groupId}", "/{memberId}/unenroll/{groupId}" })
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'ROLE_ADMIN', 'ROLE_AGENT')")
     public ResponseEntity<Member> unenrollGroup(@PathVariable Long memberId, @PathVariable Long groupId) {
         Member member = memberRepo.findById(memberId)

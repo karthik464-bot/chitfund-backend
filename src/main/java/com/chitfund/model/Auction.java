@@ -11,26 +11,36 @@ public class Auction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "group_id", nullable = false)
     private ChitGroup chitGroup;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "winner_member_id", nullable = false)
     private Member winnerMember;
 
-    private Double winningBidAmount;
+    @Column(name = "bid_amount", nullable = false)
+    private Double bidAmount;
+
+    @Column(name = "auction_date", nullable = false)
     private LocalDate auctionDate;
 
-    // Automated Calculations
+    // Automated Auction Calculations
+    @Column(name = "foreman_commission")
     private Double foremanCommission;
+
+    @Column(name = "total_discount")
     private Double totalDiscount;
+
+    @Column(name = "dividend_per_member")
     private Double dividendPerMember;
+
+    @Column(name = "next_installment_amount")
     private Double nextInstallmentAmount;
 
     public Auction() {}
 
-    // Getters and Setters
+    // Primary Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -40,8 +50,12 @@ public class Auction {
     public Member getWinnerMember() { return winnerMember; }
     public void setWinnerMember(Member winnerMember) { this.winnerMember = winnerMember; }
 
-    public Double getWinningBidAmount() { return winningBidAmount; }
-    public void setWinningBidAmount(Double winningBidAmount) { this.winningBidAmount = winningBidAmount; }
+    public Double getBidAmount() { return bidAmount; }
+    public void setBidAmount(Double bidAmount) { this.bidAmount = bidAmount; }
+
+    // Alias methods for compatibility with winningBidAmount references
+    public Double getWinningBidAmount() { return bidAmount; }
+    public void setWinningBidAmount(Double winningBidAmount) { this.bidAmount = winningBidAmount; }
 
     public LocalDate getAuctionDate() { return auctionDate; }
     public void setAuctionDate(LocalDate auctionDate) { this.auctionDate = auctionDate; }

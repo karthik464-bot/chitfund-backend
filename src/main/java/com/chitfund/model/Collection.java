@@ -1,43 +1,55 @@
 package com.chitfund.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "collections")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Collection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "chit_group_id", nullable = false)
     private ChitGroup chitGroup;
 
-    @Column(nullable = false)
-    private BigDecimal amount;
+    @Column(name = "amount", nullable = false)
+    private Double amount;
 
-    @Column(nullable = false)
+    @Column(name = "payment_date", nullable = false)
     private LocalDate paymentDate;
 
-    @Column(nullable = false)
+    @Column(name = "payment_mode")
     private String paymentMode;
 
-    @Column(nullable = false)
     private String status = "PAID";
+
+    public Collection() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Member getMember() { return member; }
+    public void setMember(Member member) { this.member = member; }
+
+    public ChitGroup getChitGroup() { return chitGroup; }
+    public void setChitGroup(ChitGroup chitGroup) { this.chitGroup = chitGroup; }
+
+    public Double getAmount() { return amount; }
+    public void setAmount(Double amount) { this.amount = amount; }
+
+    public LocalDate getPaymentDate() { return paymentDate; }
+    public void setPaymentDate(LocalDate paymentDate) { this.paymentDate = paymentDate; }
+
+    public String getPaymentMode() { return paymentMode; }
+    public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }
