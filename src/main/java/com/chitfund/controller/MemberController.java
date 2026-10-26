@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/members")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class MemberController {
 
     private final MemberRepository memberRepo;
@@ -24,7 +24,7 @@ public class MemberController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'MEMBER', 'ROLE_ADMIN', 'ROLE_AGENT', 'ROLE_MEMBER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_AGENT', 'ROLE_MEMBER', 'ADMIN', 'AGENT', 'MEMBER')")
     public ResponseEntity<List<Member>> getAllMembers(@RequestParam(required = false) String search) {
         if (search != null && !search.trim().isEmpty()) {
             return ResponseEntity.ok(memberRepo.findByNameContainingIgnoreCase(search));
@@ -33,13 +33,13 @@ public class MemberController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN')")
     public ResponseEntity<Member> createMember(@RequestBody Member member) {
         return ResponseEntity.ok(memberRepo.save(member));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN')")
     public ResponseEntity<Member> updateMember(@PathVariable Long id, @RequestBody Member details) {
         Member member = memberRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + id));
@@ -56,7 +56,7 @@ public class MemberController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
         Member member = memberRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + id));
@@ -71,9 +71,8 @@ public class MemberController {
         return ResponseEntity.noContent().build();
     }
 
-    // Maps both /groups/{groupId} (React default) and /enroll/{groupId}
     @PostMapping({ "/{memberId}/groups/{groupId}", "/{memberId}/enroll/{groupId}" })
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'ROLE_ADMIN', 'ROLE_AGENT')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_AGENT', 'ADMIN', 'AGENT')")
     public ResponseEntity<Member> enrollGroup(@PathVariable Long memberId, @PathVariable Long groupId) {
         Member member = memberRepo.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + memberId));
@@ -84,9 +83,8 @@ public class MemberController {
         return ResponseEntity.ok(memberRepo.save(member));
     }
 
-    // Maps both /groups/{groupId} and /unenroll/{groupId}
     @DeleteMapping({ "/{memberId}/groups/{groupId}", "/{memberId}/unenroll/{groupId}" })
-    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT', 'ROLE_ADMIN', 'ROLE_AGENT')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_AGENT', 'ADMIN', 'AGENT')")
     public ResponseEntity<Member> unenrollGroup(@PathVariable Long memberId, @PathVariable Long groupId) {
         Member member = memberRepo.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("Member not found with id: " + memberId));
